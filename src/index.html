@@ -1,0 +1,1258 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Escape</title>
+    <style type="text/css">
+      body {
+        margin: 0px;
+        background-color: #000000;
+      }
+      @font-face {
+        font-family: "Soopafresh";
+        src: url("fonts/soopafresh.ttf");
+        src: local("fonts/soopafresh"), url("fonts/soopafresh.ttf");
+      }
+    </style>
+  </head>
+
+  <body>
+    <canvas id="canvas" width="800" height="500"></canvas>
+
+    <script type="text/javascript">
+      var anim = (function () {
+        return (
+          window.requestAnimationFrame ||
+          window.webkitRequestAnimationFrame ||
+          window.mozRequestAnimationFrame ||
+          function (callback) {
+            window.setTimeout(callback, 1000 / 60);
+          }
+        );
+      })();
+
+      var canvas = document.getElementById("canvas");
+      var ctx = canvas.getContext("2d");
+      function ajustar() {
+        var atualw = window.innerWidth;
+        var atualh = window.innerHeight;
+        canvas.style.position = "fixed";
+        if (atualw / canvas.width > atualh / canvas.height) {
+          canvas.style.width = (atualh / canvas.height) * canvas.width + "px";
+          canvas.style.height = "100%";
+        } else {
+          canvas.style.width = "100%";
+          canvas.style.height = (atualw / canvas.width) * canvas.height + "px";
+        }
+        canvas.style.marginLeft = (atualw - canvas.offsetWidth) / 2 + "px";
+        canvas.style.marginTop = (atualh - canvas.offsetHeight) / 2 + "px";
+        canvas.style.backgroundColor = "#FFFFFF";
+      }
+      ajustar();
+      window.onresize = ajustar;
+      var rato = new Image();
+      rato.src = "images/rato.png";
+      var atual = false;
+      var ultimos = false;
+      var mouse = {
+        baixo: false,
+        x: 140,
+        y: 0,
+      };
+      function atualizar() {
+        if (!ultimos) {
+          ultimos = new Date() - 30;
+        }
+        setTimeout(atualizar, (1000 - (new Date() - ultimos)) / 30);
+        ultimos = new Date();
+        if (atual) {
+          atual();
+        }
+        mouse.ultimoCima = false;
+      }
+      atualizar();
+
+      var linguagem = {
+        atual: "pt",
+        pt: {
+          a: "Jogar",
+          b: "Como Jogar",
+          c: "Créditos",
+          d: "Mantenha o mouse pressionado para o rato bater as asas",
+          e: "Use o cursor do mouse para movimentar-se",
+          f: "Desvie da lava e das bolas de canhões",
+          g: "Voltar",
+          h: "Inspirado no Transformice",
+          i: "Desenvolvido por Matheus Cristian",
+          j: "Imagens",
+          k: "Agradecimentos",
+          l: "À você por ter jogado!",
+          m: "Ao melhor fansite sobre Transformice",
+          n: "(Primo de todo mundo)",
+          o: "(Tradutor)",
+          p: "Fim de Jogo",
+          q: "Sobrevivido por ",
+          r: " segundos",
+          s: "Queijos Coletados:",
+        },
+        en: {
+          a: "Play",
+          b: "How to Play",
+          c: "Credits",
+          d: "Press and hold the mouse button to fly",
+          e: "Use the mouse cursor to move",
+          f: "Dodge the cannon balls and the lava ground",
+          g: "Back",
+          h: "Inspired by Transformice",
+          i: "Developed by Matheus Cristian",
+          j: "Images",
+          k: "Special Thanks",
+          l: "To you for playing!",
+          m: "To the best Transformice fansite",
+          n: "(Everyone's cousin)",
+          o: "(Translator)",
+          p: "Game Over",
+          q: "You survived ",
+          r: " seconds",
+          s: "Cheese collected:",
+        },
+      };
+      if (!localStorage.linguagemAtual) {
+        localStorage.linguagemAtual = "pt";
+      } else {
+        linguagem.atual = localStorage.linguagemAtual;
+      }
+      function Imagem(imagemsrc) {
+        var imagem = new Image();
+        imagem.src = imagemsrc;
+        return imagem;
+      }
+      var rato = {
+        atual: 0,
+        inclinacao: 0,
+        x: 100,
+        y: 0,
+        forcaX: 0,
+        forcaY: 0,
+        lado: 1,
+      };
+      var bolasDeCanhao = [
+        { x: 0, tipo: 0, y: 420, atual: 0, forcaX: 200, forcaY: -80 },
+      ];
+      var imagens = {};
+      var bolhas = [];
+      var ultimo = false;
+      var ratoCorpo = {
+        x: function () {
+          return rato.x + 25;
+        },
+        y: function () {
+          return rato.y + 25;
+        },
+      };
+      var contadorDeQuadros = 0;
+      var lava = {
+        y: -200,
+      };
+      var subindo = true;
+      function colidiu(x1, y1, x2, y2, w2, h2) {
+        if (x1 > x2 && x1 < x2 + w2 && y1 > y2 && y1 < y2 + h2) {
+          return true;
+        } else {
+          return false;
+        }
+      }
+      var total = 0;
+      var carregadas = 0;
+      var tempo = false;
+      var queijosColetados = 0;
+      var y = 500;
+      atual = carregar;
+      var facebook = 0;
+      var rato1 = {
+        forcaY: 0,
+        y: 10,
+        inclinacao: 0,
+        atual: 0,
+        mouse: {
+          baixo: false,
+        },
+      };
+      var ultimoComoJogar = 0;
+      var ratoMenu = {
+        y: 0,
+        forcaY: 100,
+      };
+      function comoJogar() {
+        ctx.clearRect(0, 0, 800, 500);
+        ctx.fillStyle = "#6A7495";
+        ctx.fillRect(0, 0, 800, 500);
+        ctx.save();
+        if (colidiu(mouse.x, mouse.y, 600, 430, 190, 60)) {
+          ctx.globalAlpha = 0.7;
+          if (mouse.ultimoCima) {
+            atual = menu;
+            contadorDeQuadros = 0;
+            y = 500;
+          }
+        } else {
+          ctx.globalAlpha = 1;
+        }
+        ctx.fillStyle = "#FFFFFF";
+        ctx.font = "30px Soopafresh";
+        ctx.textBaseline = "middle";
+        ctx.textAlign = "center";
+        ctx.drawImage(imagens.botao, 600, 430);
+        ctx.strokeStyle = "#000000";
+        ctx.lineWidth = "6";
+        ctx.strokeText(linguagem[linguagem.atual].g, 700, 460);
+        ctx.fillText(linguagem[linguagem.atual].g, 700, 460);
+        ctx.restore();
+        function textoArea(texto, x, y, width, align) {
+          var texto = texto.split(" ");
+          ctx.textBaseline = "top";
+          ctx.textAlign = "" + align + "";
+          var essaLinha = "";
+          var contadorDeLinhas = 0;
+          for (var i = 0; i < texto.length; i++) {
+            var atual = texto[i];
+            var widthAtual = ctx.measureText(essaLinha).width;
+            if (widthAtual > width) {
+              if (essaLinha[0] == " ") {
+                essaLinha = essaLinha.split(/^ /gi)[1];
+              }
+              ctx.fillText(essaLinha, x, y + contadorDeLinhas);
+              essaLinha = atual;
+              contadorDeLinhas += Number("" + ctx.font.split("px")[0] + "");
+              if (i == texto.length - 1) {
+                ctx.fillText(essaLinha, x, y + contadorDeLinhas);
+                essaLinha = "";
+                contadorDeLinhas += Number("" + ctx.font.split("px")[0] + "");
+              }
+            } else if (i == texto.length - 1) {
+              essaLinha += " " + atual + "";
+              ctx.fillText(essaLinha, x, y + contadorDeLinhas);
+              essaLinha = "";
+              contadorDeLinhas += Number("" + ctx.font.split("px")[0] + "");
+            } else {
+              essaLinha += " " + atual + "";
+            }
+          }
+        }
+        ctx.font = "30px Soopafresh";
+        ctx.fillStyle = "#FFFFFF";
+        textoArea(linguagem[linguagem.atual].d, 740, 30, 180, "right");
+        var localAtual = 0;
+        if (contadorDeQuadros < 30) {
+          localAtual = contadorDeQuadros;
+        } else {
+          localAtual = 30 - (contadorDeQuadros - 30);
+        }
+        rato1.forcaY += 10;
+        if (rato1.y > 50) {
+          rato1.mouse.baixo = true;
+        }
+        if (rato1.y < 50) {
+          rato1.mouse.baixo = false;
+        }
+        if (rato1.mouse.baixo) {
+          rato1.atual = rato1.atual + 1;
+          rato1.inclinacao -= 0.05;
+          rato1.inclinacao *= 0.9;
+          rato1.forcaY -= 20;
+          ctx.drawImage(imagens.comoJogar3, 438 - imagens.comoJogar3.width, 60);
+        } else {
+          rato1.atual = 1;
+          rato1.inclinacao += 0.05;
+          rato1.inclinacao *= 1.1;
+          if (rato1.inclinacao > 0.449) {
+            rato1.inclinacao = 0.449;
+          }
+          ctx.drawImage(imagens.comoJogar2, 438 - imagens.comoJogar2.width, 60);
+        }
+        rato1.y += rato1.forcaY / 10;
+        ctx.save();
+        ctx.translate(79 / 2 + 200, 82 / 2 + rato1.y);
+        ctx.rotate(rato1.inclinacao);
+        ctx.drawImage(
+          imagens.rato,
+          (rato1.atual % 7) * 79,
+          0,
+          79,
+          82,
+          -(79 / 2),
+          -(82 / 2),
+          79,
+          82
+        );
+        ctx.restore();
+        var esse = rato1.inclinacao;
+        if (
+          ultimoComoJogar -
+            (100 * Math.sin((2 * Math.PI * (contadorDeQuadros - 10)) / 100) +
+              560) >=
+          -2.8
+        ) {
+          rato1.lado = 1;
+        } else {
+          rato1.lado = 0;
+        }
+        if (rato1.lado == 1) {
+          esse = -rato1.inclinacao;
+        }
+        ultimoComoJogar =
+          100 * Math.sin((2 * Math.PI * (contadorDeQuadros - 10)) / 100) + 560;
+        ctx.font = "30px Soopafresh";
+        ctx.fillStyle = "#FFFFFF";
+        textoArea(linguagem[linguagem.atual].e, 60, 180, 100, "left");
+        ctx.save();
+        ctx.translate(
+          79 / 2 +
+            (100 * Math.sin((2 * Math.PI * (contadorDeQuadros - 10)) / 100) +
+              560),
+          82 / 2 + rato1.y + 180
+        );
+        ctx.rotate(esse);
+        ctx.drawImage(
+          imagens.rato,
+          (rato1.atual % 7) * 79,
+          rato1.lado * 82,
+          79,
+          82,
+          -(79 / 2),
+          -(82 / 2),
+          79,
+          82
+        );
+        ctx.restore();
+        ctx.drawImage(
+          imagens.comoJogar5,
+          100 * Math.sin((2 * Math.PI * contadorDeQuadros) / 100) + 600,
+          248
+        );
+        ctx.save();
+        ctx.translate(79 / 2 + 120, 82 / 2 + rato1.y + 300);
+        ctx.rotate(-rato1.inclinacao);
+        ctx.drawImage(
+          imagens.rato,
+          (rato1.atual % 7) * 79,
+          82,
+          79,
+          82,
+          -(79 / 2),
+          -(82 / 2),
+          79,
+          82
+        );
+        ctx.restore();
+        if (rato1.y == 20) {
+          if (rato1.forcaY < 0) {
+            bolasDeCanhao.push({
+              x: 0,
+              tipo: 0,
+              y: 420,
+              atual: 0,
+              forcaX: 200,
+              forcaY: -80,
+            });
+          }
+        }
+        for (var i = 0; i < bolasDeCanhao.length; i++) {
+          if (bolasDeCanhao[i].atual < 30) {
+            ctx.save();
+            ctx.globalAlpha = (bolasDeCanhao[i].atual % 10) / 20 + 0.5;
+            if (bolasDeCanhao[i].tipo == 0) {
+              ctx.drawImage(
+                imagens.alerta,
+                80 * Math.sin((2 * Math.PI * bolasDeCanhao[i].atual) / 60) - 80,
+                bolasDeCanhao[i].y - 40,
+                80,
+                80
+              );
+            } else {
+              ctx.drawImage(
+                imagens.alerta,
+                800 -
+                  80 * Math.sin((2 * Math.PI * bolasDeCanhao[i].atual) / 60),
+                bolasDeCanhao[i].y - 40,
+                80,
+                80
+              );
+            }
+            bolasDeCanhao[i].atual++;
+            ctx.restore();
+          } else {
+            bolasDeCanhao[i].forcaY += 10;
+            bolasDeCanhao[i].y += bolasDeCanhao[i].forcaY / 10;
+            bolasDeCanhao[i].x += bolasDeCanhao[i].forcaX / 10;
+            ctx.drawImage(
+              imagens.bolasDeCanhao,
+              bolasDeCanhao[i].tipo * 32,
+              0,
+              32,
+              32,
+              bolasDeCanhao[i].x,
+              bolasDeCanhao[i].y,
+              32,
+              32
+            );
+            if (bolasDeCanhao[i].y > 500) {
+              bolasDeCanhao.splice(i, 1);
+              i--;
+              continue;
+            }
+          }
+        }
+        ctx.drawImage(imagens.lava, 0, 0, 100, 20, 100, 280, 100, 20);
+        textoArea(linguagem[linguagem.atual].f, 740, 350, 300, "right");
+        contadorDeQuadros++;
+      }
+      function creditos() {
+        var texto = {};
+        texto[linguagem[linguagem.atual].h] = [];
+        texto[linguagem[linguagem.atual].i] = [
+          ["(facebook.com/mathuesJS)", ""],
+        ];
+        texto.Imagens = [
+          [
+            "Pegamouse por harrie5 (Deviantart)",
+            "(http://www.deviantart.com/art/Pegamouse-254460449)",
+          ],
+          [
+            "Come at me bro... por pspmuch (Deviantart)",
+            "(http://pspmuch.deviantart.com/art/Come-at-me-bro-343809178)",
+          ],
+          ["Transformice"],
+          ["Matheus Cristian"],
+        ];
+        texto[linguagem[linguagem.atual].k] = [
+          [linguagem[linguagem.atual].l],
+          [linguagem[linguagem.atual].m, "Área 801"],
+          ["Ricardo e Rodrigo"],
+          ["Ninguem", "(None)"],
+          ["Flávio Monteiro", linguagem[linguagem.atual].n],
+          ["Rafael Silva", linguagem[linguagem.atual].o],
+        ];
+        ctx.clearRect(0, 0, 800, 500);
+        ctx.fillStyle = "#6A7495";
+        ctx.fillRect(0, 0, 800, 500);
+        ctx.fillStyle = "#FFFFFF";
+        var atualY = y;
+        ctx.textBaseline = "top";
+        for (var i in texto) {
+          ctx.font = "28px Arial";
+          ctx.textAlign = "center";
+          ctx.fillText(i, 400, atualY);
+          atualY += 30;
+          if (i != "Desenvolvido por Matheus Cristian") {
+            atualY += 18;
+          }
+          for (var o = 0; o < texto[i].length; o++) {
+            for (var u = 0; u < texto[i][o].length; u++) {
+              ctx.font = "16px Arial";
+              ctx.fillText(texto[i][o][u], 400, atualY);
+              atualY += 20;
+              if (u == texto[i][o].length - 1) {
+                atualY += 16;
+              }
+            }
+          }
+          atualY += 16 + 16 / 2;
+        }
+        ctx.textBaseline = "alphabetic";
+        if (y < -500 - atualY) {
+          y = 500;
+        }
+        y--;
+        ctx.save();
+        if (colidiu(mouse.x, mouse.y, 600, 430, 190, 60)) {
+          ctx.globalAlpha = 0.7;
+          if (mouse.ultimoCima) {
+            atual = menu;
+            contadorDeQuadros = 0;
+            y = 500;
+          }
+        } else {
+          ctx.globalAlpha = 1;
+        }
+        ctx.fillStyle = "#FFFFFF";
+        ctx.font = "30px Soopafresh";
+        ctx.textBaseline = "middle";
+        ctx.textAlign = "center";
+        ctx.drawImage(imagens.botao, 600, 430);
+        ctx.strokeStyle = "#000000";
+        ctx.lineWidth = "6";
+        ctx.strokeText(linguagem[linguagem.atual].g, 700, 460);
+        ctx.fillText(linguagem[linguagem.atual].g, 700, 460);
+        ctx.restore();
+        ctx.save();
+        if (imagens.facebook.width > 50) {
+          imagens.facebook.forcaX += -10;
+        } else {
+          imagens.facebook.forcaX += +10;
+        }
+        imagens.facebook.width += imagens.facebook.forcaX / 10;
+        imagens.facebook.height += imagens.facebook.forcaX / 10;
+        if (
+          colidiu(
+            mouse.x,
+            mouse.y,
+            55 - imagens.facebook.width / 2,
+            55 - imagens.facebook.height / 2,
+            imagens.facebook.width,
+            imagens.facebook.height
+          )
+        ) {
+          ctx.globalAlpha = 0.7;
+          canvas.style.cursor = "pointer";
+          if (mouse.ultimoCima) {
+            window.open("http://facebook.com/mathuesJS/");
+          }
+        } else {
+          ctx.globalAlpha = 1;
+          canvas.style.cursor = "default";
+        }
+        ctx.drawImage(
+          imagens.facebook,
+          55 - imagens.facebook.width / 2,
+          55 - imagens.facebook.height / 2,
+          imagens.facebook.width,
+          imagens.facebook.height
+        );
+        facebook++;
+        if (facebook == 200) {
+          facebook = 0;
+        }
+        ctx.font = "16px Arial";
+        ctx.textAlign = "center";
+        ctx.fillText("click", 55, 100);
+        ctx.restore();
+      }
+      function carregar() {
+        imagens = {
+          bolasDeCanhao: new Imagem("images/bolaDeCanhao.png"),
+          alerta: new Imagem("images/alerta.png"),
+          bolha: new Imagem("images/bolha.png"),
+          lava: new Imagem("images/lava.png"),
+          logo: new Imagem("images/logo.png"),
+          rato: new Imagem("images/rato.png"),
+          html5: new Imagem("images/html5.png"),
+          facebook: new Imagem("images/facebook.png"),
+          pt1: new Imagem("images/pt1.png"),
+          pt2: new Imagem("images/pt2.png"),
+          pt3: new Imagem("images/pt3.png"),
+          pt4: new Imagem("images/pt4.png"),
+          pt5: new Imagem("images/pt5.png"),
+          pt6: new Imagem("images/pt6.png"),
+          pt7: new Imagem("images/pt7.png"),
+          pt8: new Imagem("images/pt8.png"),
+          pt9: new Imagem("images/pt9.png"),
+          pt10: new Imagem("images/pt10.png"),
+          en1: new Imagem("images/en1.png"),
+          en2: new Imagem("images/en2.png"),
+          en3: new Imagem("images/en3.png"),
+          en4: new Imagem("images/en4.png"),
+          en5: new Imagem("images/en5.png"),
+          en6: new Imagem("images/en6.png"),
+          en7: new Imagem("images/en7.png"),
+          en8: new Imagem("images/en8.png"),
+          en9: new Imagem("images/en9.png"),
+          comoJogar2: new Imagem("images/comoJogar2.png"),
+          comoJogar3: new Imagem("images/comoJogar3.png"),
+          comoJogar5: new Imagem("images/comoJogar5.png"),
+          fundo2: new Imagem("images/fundo2.png"),
+          botao: new Imagem("images/botao.png"),
+        };
+        imagens.facebook.width = 60;
+        imagens.facebook.height = 60;
+        imagens.facebook.forcaX = 0;
+        if (total == 0) {
+          for (var i in imagens) {
+            total++;
+            imagens[i].onload = function () {
+              carregadas++;
+            };
+          }
+        }
+        ctx.clearRect(0, 0, 800, 500);
+        ctx.fillStyle = "#6A7495";
+        ctx.fillRect(0, 0, 800, 500);
+        ctx.fillStyle = "#FFFFFF";
+        ctx.font = "28px Arial";
+        ctx.textAlign = "center";
+        ctx.fillText("Carregando....", 400, 200);
+        ctx.fillText(Math.floor((carregadas / total) * 100) + "%", 400, 228);
+        if (carregadas == total) {
+          atual = menu;
+        }
+      }
+      function menu() {
+        ctx.clearRect(0, 0, 800, 500);
+        ctx.fillStyle = "#6A7495";
+        ctx.fillRect(0, 0, 800, 500);
+        ctx.save();
+        ctx.scale(-1, 1);
+        if (ratoMenu.y < 0) {
+          ratoMenu.forcaY += 10;
+        } else {
+          ratoMenu.forcaY -= 10;
+        }
+        ratoMenu.y += ratoMenu.forcaY / 30;
+        ctx.drawImage(imagens.fundo2, -800, ratoMenu.y);
+        ctx.restore();
+        ctx.save();
+        ctx.translate(400, 100);
+        ctx.rotate(0.2 * Math.sin((2 * Math.PI * contadorDeQuadros) / 60));
+        ctx.drawImage(
+          imagens.logo,
+          -(imagens.logo.width / 2) +
+            30 * Math.sin((2 * Math.PI * contadorDeQuadros) / 20),
+          -(imagens.logo.height / 2)
+        );
+        ctx.restore();
+        ctx.save();
+        if (colidiu(mouse.x, mouse.y, 305, 200, 190, 60)) {
+          ctx.globalAlpha = 0.7;
+          if (mouse.ultimoCima) {
+            atual = jogar;
+            rato = {
+              atual: 0,
+              inclinacao: 0,
+              x: 100,
+              y: 0,
+              forcaX: 0,
+              forcaY: 0,
+              lado: 1,
+            };
+            bolasDeCanhao = [
+              { x: 0, tipo: 0, y: 50, atual: 0, forcaX: 200, forcaY: -80 },
+              { x: 720, tipo: 1, y: 50, atual: 0, forcaX: -200, forcaY: -80 },
+            ];
+            lava = {
+              y: -200,
+            };
+            ultimo = false;
+            rato.x = mouse.x - 40;
+            rato.y = mouse.y - 40;
+            contadorDeQuadros = -1;
+            subindo = true;
+            tempo = new Date();
+            queijosColetados = 0;
+          }
+        } else {
+          ctx.globalAlpha = 1;
+        }
+        ctx.fillStyle = "#FFFFFF";
+        ctx.font = "30px Soopafresh";
+        ctx.textBaseline = "middle";
+        ctx.textAlign = "center";
+        ctx.drawImage(imagens.botao, 305, 200);
+        ctx.strokeStyle = "#000000";
+        ctx.lineWidth = "6";
+        ctx.strokeText(linguagem[linguagem.atual].a, 400, 230);
+        ctx.fillText(linguagem[linguagem.atual].a, 400, 230);
+        if (colidiu(mouse.x, mouse.y, 305, 270, 190, 60)) {
+          ctx.globalAlpha = 0.7;
+          if (mouse.ultimoCima) {
+            atual = comoJogar;
+            contadorDeQuadros = 0;
+            bolasDeCanhao = [
+              { x: 0, tipo: 0, y: 420, atual: 0, forcaX: 200, forcaY: -80 },
+            ];
+          }
+        } else {
+          ctx.globalAlpha = 1;
+        }
+        ctx.fillStyle = "#FFFFFF";
+        ctx.font = "30px Soopafresh";
+        ctx.textBaseline = "middle";
+        ctx.textAlign = "center";
+        ctx.drawImage(imagens.botao, 305, 270);
+        ctx.strokeStyle = "#000000";
+        ctx.lineWidth = "6";
+        ctx.strokeText(linguagem[linguagem.atual].b, 400, 300);
+        ctx.fillText(linguagem[linguagem.atual].b, 400, 300);
+        if (colidiu(mouse.x, mouse.y, 305, 340, 190, 60)) {
+          ctx.globalAlpha = 0.7;
+          if (mouse.ultimoCima) {
+            atual = creditos;
+            queijosColetados = 0;
+            y = 500;
+          }
+        } else {
+          ctx.globalAlpha = 1;
+        }
+        ctx.fillStyle = "#FFFFFF";
+        ctx.font = "30px Soopafresh";
+        ctx.textBaseline = "middle";
+        ctx.textAlign = "center";
+        ctx.drawImage(imagens.botao, 305, 340);
+        ctx.strokeStyle = "#000000";
+        ctx.lineWidth = "6";
+        ctx.strokeText(linguagem[linguagem.atual].c, 400, 370);
+        ctx.fillText(linguagem[linguagem.atual].c, 400, 370);
+        ctx.restore();
+        if (subindo) {
+          contadorDeQuadros++;
+          if (contadorDeQuadros == 60) {
+            contadorDeQuadros = 0;
+          }
+        }
+        var novoWidth = imagens.html5.width;
+        var novoHeight = imagens.html5.height;
+        var localAtual = 0;
+        if (contadorDeQuadros < 30) {
+          localAtual = contadorDeQuadros;
+        } else {
+          localAtual = 30 - (contadorDeQuadros - 30);
+        }
+        novoWidth += ((30 - localAtual) / 30) * 20;
+        novoHeight +=
+          ((30 - localAtual) / 30) *
+          20 *
+          (imagens.html5.height / imagens.html5.width);
+        ctx.drawImage(
+          imagens.html5,
+          720 - novoWidth / 2,
+          440 - novoHeight / 2,
+          novoWidth,
+          novoHeight
+        );
+        if (localStorage.melhorPontuacao) {
+          ctx.save();
+          ctx.textAlign = "center";
+          ctx.fillStyle = "#FFFFFF";
+          ctx.textBaseline = "middle";
+          ctx.font =
+            "" +
+            (20 * Math.sin((2 * Math.PI * contadorDeQuadros) / 20) + 50) +
+            "px Arial";
+          ctx.translate(700, 80);
+          ctx.rotate(0.5);
+          ctx.fillText("" + localStorage.melhorPontuacao + "s", 0, 0);
+          ctx.restore();
+        }
+        ctx.fillStyle = "#FFFFFF";
+        ctx.save();
+        if (colidiu(mouse.x, mouse.y, 10, 10, 128, 58)) {
+          ctx.globalAlpha = 0.7;
+          if (mouse.ultimoCima) {
+            linguagem.atual = "pt";
+            localStorage.linguagemAtual = linguagem.atual;
+            linguagem.atual = localStorage.linguagemAtual;
+          }
+        } else {
+          ctx.globalAlpha = 0;
+        }
+        if (linguagem.atual == "pt") {
+          ctx.globalAlpha = 0.8;
+        }
+        ctx.fillRect(10, 10, 128, 58);
+        ctx.restore();
+        ctx.font = "16px Arial";
+        ctx.textBaseline = "middle";
+        ctx.textAlign = "left";
+        ctx.fillText("Português", 15, 20);
+        for (var i = 0; i < 10; i++) {
+          ctx.drawImage(
+            imagens["" + "pt" + (i + 1)],
+            15 + (22 * (i % 5) + (i % 5) * 2),
+            30 + Math.floor(i / 5) * 15 + Math.floor(i / 5) * 2,
+            22,
+            15
+          );
+        }
+        ctx.save();
+        if (colidiu(mouse.x, mouse.y, 10, 70, 128, 58)) {
+          ctx.globalAlpha = 0.7;
+          if (mouse.ultimoCima) {
+            linguagem.atual = "en";
+            localStorage.linguagemAtual = linguagem.atual;
+            linguagem.atual = localStorage.linguagemAtual;
+          }
+        } else {
+          ctx.globalAlpha = 0;
+        }
+        if (linguagem.atual == "en") {
+          ctx.globalAlpha = 0.8;
+        }
+        ctx.fillRect(10, 68, 128, 58);
+        ctx.restore();
+        ctx.fillText("English", 15, 78);
+        for (var i = 0; i < 9; i++) {
+          ctx.drawImage(
+            imagens["" + "en" + (i + 1)],
+            15 + (22 * (i % 5) + (i % 5) * 2),
+            88 + Math.floor(i / 5) * 15 + Math.floor(i / 5) * 2,
+            22,
+            15
+          );
+        }
+      }
+
+      function jogar() {
+        ctx.clearRect(0, 0, 800, 500);
+        ctx.fillStyle = "#6A7495";
+        ctx.fillRect(0, 0, 800, 500);
+        rato.forcaY += 10;
+        if (mouse.baixo) {
+          rato.atual = rato.atual + 1;
+          rato.inclinacao -= 0.05;
+          rato.inclinacao *= 0.9;
+          rato.forcaY -= 20;
+        } else {
+          rato.atual = 1;
+          rato.inclinacao += 0.05;
+          rato.inclinacao *= 1.1;
+          if (rato.inclinacao > 0.449) {
+            rato.inclinacao = 0.449;
+          }
+        }
+        rato.y += rato.forcaY / 10;
+        if (rato.y < 0) {
+          rato.y = 0;
+          rato.forcaY *= -0.2;
+        }
+        if (rato.y > 500) {
+          rato.y = 500;
+          atual = fimDeJogo;
+          for (var i = 0; i < Math.floor(Math.random() * 10) + 30; i++) {
+            var tamanho = Math.floor(Math.random() * 30) + 10;
+            bolhas.push({
+              x: ratoCorpo.x() + 15,
+              y: ratoCorpo.y() + 15,
+              w: tamanho,
+              h: tamanho,
+              forcaY: -Math.floor(Math.random() * 100),
+              forcaX: Math.floor(Math.random() * 200 - 100),
+              vida: Math.floor(Math.random() * 50 + 10),
+              atual: 0,
+            });
+          }
+        }
+        var x = mouse.x;
+        if (x <= 140) {
+          x = 140;
+        }
+        if (x >= 660) {
+          x = 660;
+        }
+        var esse = rato.inclinacao;
+        if (rato.lado == 1) {
+          esse = -rato.inclinacao;
+        }
+        rato.forcaX += x - (rato.x + 40);
+        rato.forcaX *= 0.8;
+        if (rato.forcaX >= -2.8) {
+          rato.lado = 0;
+        } else {
+          rato.lado = 1;
+        }
+        rato.x += rato.forcaX / 10;
+        ctx.save();
+        ctx.translate(79 / 2 + rato.x, 82 / 2 + rato.y);
+        ctx.rotate(esse);
+        ctx.drawImage(
+          imagens.rato,
+          (rato.atual % 7) * 79,
+          rato.lado * 82,
+          79,
+          82,
+          -(79 / 2),
+          -(82 / 2),
+          79,
+          82
+        );
+        ctx.restore();
+        if (contadorDeQuadros % 270 > 180) {
+          if (contadorDeQuadros % 270 < 210) {
+            ctx.save();
+            ctx.globalAlpha = (contadorDeQuadros % 10) / 20 + 0.5;
+            ctx.drawImage(
+              imagens.alerta,
+              380,
+              80 * Math.sin((2 * Math.PI * (contadorDeQuadros % 30)) / 60) - 80,
+              80,
+              80
+            );
+            ctx.restore();
+          }
+          if (contadorDeQuadros % 270 > 210) {
+            lava.y =
+              100 *
+                Math.sin(
+                  (2 * Math.PI * ((contadorDeQuadros % 270) - 210)) / 120
+                ) -
+              100;
+            ctx.drawImage(
+              imagens.lava,
+              0,
+              0,
+              800,
+              100,
+              0,
+              100 *
+                Math.sin(
+                  (2 * Math.PI * ((contadorDeQuadros % 270) - 210)) / 120
+                ) -
+                100,
+              800,
+              100
+            );
+          }
+        }
+        if (ratoCorpo.y() < lava.y + 100) {
+          atual = fimDeJogo;
+          for (var i = 0; i < Math.floor(Math.random() * 10) + 30; i++) {
+            var tamanho = Math.floor(Math.random() * 30) + 10;
+            bolhas.push({
+              x: ratoCorpo.x() + 15,
+              y: rato.y,
+              w: tamanho,
+              h: tamanho,
+              forcaY: -Math.floor(Math.random() * 100),
+              forcaX: Math.floor(Math.random() * 200 - 100),
+              vida: Math.floor(Math.random() * 50 + 10),
+              atual: 0,
+            });
+          }
+        }
+        for (var i = 0; i < bolasDeCanhao.length; i++) {
+          if (bolasDeCanhao[i].atual < 30) {
+            ctx.save();
+            ctx.globalAlpha = (bolasDeCanhao[i].atual % 10) / 20 + 0.5;
+            if (bolasDeCanhao[i].tipo == 0) {
+              ctx.drawImage(
+                imagens.alerta,
+                80 * Math.sin((2 * Math.PI * bolasDeCanhao[i].atual) / 60) - 80,
+                bolasDeCanhao[i].y - 40,
+                80,
+                80
+              );
+            } else {
+              ctx.drawImage(
+                imagens.alerta,
+                800 -
+                  80 * Math.sin((2 * Math.PI * bolasDeCanhao[i].atual) / 60),
+                bolasDeCanhao[i].y - 40,
+                80,
+                80
+              );
+            }
+            bolasDeCanhao[i].atual++;
+            ctx.restore();
+          } else {
+            bolasDeCanhao[i].forcaY += 10;
+            bolasDeCanhao[i].y += bolasDeCanhao[i].forcaY / 10;
+            bolasDeCanhao[i].x += bolasDeCanhao[i].forcaX / 10;
+            ctx.drawImage(
+              imagens.bolasDeCanhao,
+              bolasDeCanhao[i].tipo * 32,
+              0,
+              32,
+              32,
+              bolasDeCanhao[i].x,
+              bolasDeCanhao[i].y,
+              32,
+              32
+            );
+            if (bolasDeCanhao[i].y > 500) {
+              bolasDeCanhao.splice(i, 1);
+              i--;
+              continue;
+            }
+            if (
+              bolasDeCanhao[i].x + 32 > ratoCorpo.x() &&
+              bolasDeCanhao[i].x < ratoCorpo.x() + 30 &&
+              bolasDeCanhao[i].y + 32 > ratoCorpo.y() &&
+              bolasDeCanhao[i].y < ratoCorpo.y() + 30
+            ) {
+              atual = fimDeJogo;
+            }
+          }
+        }
+        function gerarBolasDeCanhao() {
+          bolasDeCanhao.push({
+            x: 0,
+            tipo: Math.floor(Math.random() * 2),
+            y: Math.floor(Math.random() * 450),
+            atual: 0,
+            forcaX: 200,
+            forcaY: -80,
+          });
+          if (bolasDeCanhao[bolasDeCanhao.length - 1].tipo == 1) {
+            bolasDeCanhao[bolasDeCanhao.length - 1].x = 720;
+            bolasDeCanhao[bolasDeCanhao.length - 1].forcaX = -200;
+          }
+        }
+        if (contadorDeQuadros % 50 == 0) {
+          gerarBolasDeCanhao();
+        }
+        if (contadorDeQuadros > 200) {
+          if (contadorDeQuadros % 50 == 0) {
+            gerarBolasDeCanhao();
+          }
+          if (contadorDeQuadros > 400) {
+            if ((contadorDeQuadros + 25) % 50 == 0) {
+              gerarBolasDeCanhao();
+            }
+            if (contadorDeQuadros > 600) {
+              if ((contadorDeQuadros + 25) % 50 == 0) {
+                gerarBolasDeCanhao();
+              }
+            }
+          }
+        }
+        contadorDeQuadros++;
+      }
+      function fimDeJogo() {
+        if (!ultimo) {
+          tempo = new Date() - tempo;
+          ultimo = ctx.getImageData(0, 0, 800, 500);
+          contadorDeQuadros = 0;
+          if (localStorage.melhorPontuacao) {
+            if (localStorage.melhorPontuacao < Math.floor(tempo / 10) / 100) {
+              localStorage.melhorPontuacao = Math.floor(tempo / 10) / 100;
+            }
+          } else {
+            localStorage.melhorPontuacao = Math.floor(tempo / 10) / 100;
+          }
+        } else {
+          ctx.clearRect(0, 0, 800, 500);
+          ctx.putImageData(ultimo, 0, 0);
+        }
+        for (var i = 0; i < bolhas.length; i++) {
+          bolhas[i].forcaY -= 1;
+          bolhas[i].forcaY *= 0.9;
+          bolhas[i].y += bolhas[i].forcaY / 10;
+          bolhas[i].forcaX *= 0.9;
+          bolhas[i].x += bolhas[i].forcaX / 10;
+          bolhas[i].atual++;
+          if (bolhas[i].atual > bolhas[i].vida) {
+            bolhas[i].w += bolhas[i].atual - bolhas[i].vida;
+            bolhas[i].h = bolhas[i].w;
+            if (bolhas[i].w > bolhas[i].vida && bolhas[i].h > bolhas[i].vida) {
+              bolhas.splice(i, 1);
+              i--;
+              continue;
+            }
+          }
+          ctx.drawImage(
+            imagens.bolha,
+            bolhas[i].x - bolhas[i].w / 2,
+            bolhas[i].y - bolhas[i].h / 2,
+            bolhas[i].w,
+            bolhas[i].h
+          );
+        }
+        function quadradoArredondado(x, y, l, a, r) {
+          if (a < r) {
+            r = a;
+          }
+          ctx.beginPath();
+          ctx.moveTo(x + r, y);
+          ctx.lineTo(x + l - r, y);
+          ctx.quadraticCurveTo(x + l, y, x + l, y + r);
+          ctx.lineTo(x + l, y + a - r);
+          ctx.quadraticCurveTo(x + l, y + a, x + l - r, y + a);
+          ctx.lineTo(x + r, y + a);
+          ctx.quadraticCurveTo(x, y + a, x, y + a - r);
+          ctx.lineTo(x, y + r);
+          ctx.quadraticCurveTo(x, y, x + r, y);
+          ctx.fill();
+          ctx.closePath();
+        }
+        var h = 0;
+        if (contadorDeQuadros < 10) {
+          h = ((contadorDeQuadros * contadorDeQuadros) / 100) * 300;
+          ctx.fillStyle = "#6A8FA2";
+          quadradoArredondado(300, 249 - h / 2, 200, h, 10);
+          ctx.fillStyle = "#000000";
+          quadradoArredondado(300, 251 - h / 2, 200, h, 10);
+          ctx.fillStyle = "#324650";
+          quadradoArredondado(300, 250 - h / 2, 200, h, 10);
+          if (contadorDeQuadros > 5) {
+            ctx.save();
+            ctx.globalAlpha = (contadorDeQuadros - 5) / 5;
+            ctx.fillStyle = "#FFFFFF";
+            ctx.font = "30px Soopafresh";
+            ctx.textBaseline = "middle";
+            ctx.textAlign = "center";
+            ctx.strokeStyle = "#000000";
+            ctx.lineWidth = "6";
+            ctx.strokeText(linguagem[linguagem.atual].p, 400, 290 - h / 2);
+            ctx.fillText(linguagem[linguagem.atual].p, 400, 290 - h / 2);
+            ctx.restore();
+          }
+        } else {
+          ctx.fillStyle = "#6A8FA2";
+          quadradoArredondado(300, 99, 200, 300, 10);
+          ctx.fillStyle = "#000000";
+          quadradoArredondado(300, 101, 200, 300, 10);
+          ctx.fillStyle = "#324650";
+          quadradoArredondado(300, 100, 200, 300, 10);
+          ctx.fillStyle = "#FFFFFF";
+          ctx.font = "30px Soopafresh";
+          ctx.textBaseline = "middle";
+          ctx.textAlign = "center";
+          ctx.strokeStyle = "#000000";
+          ctx.lineWidth = "6";
+          ctx.strokeText(linguagem[linguagem.atual].p, 400, 140);
+          ctx.fillText(linguagem[linguagem.atual].p, 400, 140);
+        }
+        if (contadorDeQuadros > 10) {
+          if (contadorDeQuadros > 15) {
+            ctx.save();
+            ctx.globalAlpha = (contadorDeQuadros - 15) / 15;
+            ctx.fillStyle = "#FFFFFF";
+            ctx.font = "16px Arial";
+            ctx.textAlign = "left";
+            ctx.fillText("" + linguagem[linguagem.atual].q + "", 310, 180);
+            ctx.fillText(
+              "" +
+                Math.floor(tempo / 10) / 100 +
+                linguagem[linguagem.atual].r +
+                "",
+              310,
+              196
+            );
+            ctx.fillText(
+              "" + linguagem[linguagem.atual].s + " " + queijosColetados + "",
+              310,
+              220
+            );
+            ctx.restore();
+          }
+          ctx.save();
+          if (colidiu(mouse.x, mouse.y, 305, 265, 190, 60)) {
+            ctx.globalAlpha = 0.7;
+            if (mouse.ultimoCima) {
+              atual = jogar;
+              rato = {
+                atual: 0,
+                inclinacao: 0,
+                x: 100,
+                y: 0,
+                forcaX: 0,
+                forcaY: 0,
+                lado: 1,
+              };
+              bolasDeCanhao = [
+                { x: 0, tipo: 0, y: 50, atual: 0, forcaX: 200, forcaY: -80 },
+                { x: 720, tipo: 1, y: 50, atual: 0, forcaX: -200, forcaY: -80 },
+              ];
+              lava = {
+                y: -200,
+              };
+              ultimo = false;
+              rato.x = mouse.x - 40;
+              rato.y = mouse.y - 40;
+              contadorDeQuadros = 0;
+              subindo = true;
+              tempo = new Date();
+              queijosColetados = 0;
+            }
+          } else {
+            ctx.globalAlpha = 1;
+          }
+          ctx.fillStyle = "#FFFFFF";
+          ctx.font = "30px Soopafresh";
+          ctx.textBaseline = "middle";
+          ctx.textAlign = "center";
+          ctx.drawImage(imagens.botao, 305, 265);
+          ctx.strokeStyle = "#000000";
+          ctx.lineWidth = "6";
+          ctx.strokeText(linguagem[linguagem.atual].a, 400, 295);
+          ctx.fillText(linguagem[linguagem.atual].a, 400, 295);
+          if (colidiu(mouse.x, mouse.y, 305, 335, 190, 60)) {
+            ctx.globalAlpha = 0.7;
+            if (mouse.ultimoCima) {
+              atual = menu;
+              contadorDeQuadros = 0;
+            }
+          } else {
+            ctx.globalAlpha = 1;
+          }
+          ctx.fillStyle = "#FFFFFF";
+          ctx.font = "30px Soopafresh";
+          ctx.textBaseline = "middle";
+          ctx.textAlign = "center";
+          ctx.drawImage(imagens.botao, 305, 335);
+          ctx.strokeStyle = "#000000";
+          ctx.lineWidth = "6";
+          ctx.strokeText(linguagem[linguagem.atual].g, 400, 365);
+          ctx.fillText(linguagem[linguagem.atual].g, 400, 365);
+          ctx.restore();
+        }
+        contadorDeQuadros++;
+      }
+
+      function touchstart(e) {
+        mouse.baixo = true;
+
+        var xToque = null;
+        var yToque = null;
+
+        if (e.changedTouches) {
+          xToque = e.changedTouches[0].pageX - canvas.offsetLeft;
+          yToque = e.changedTouches[0].pageY - canvas.offsetTop;
+        } else {
+          xToque = e.clientX - canvas.offsetLeft;
+          yToque = e.clientY - canvas.offsetTop;
+        }
+
+        mouse.x = (canvas.width / canvas.offsetWidth) * xToque;
+        mouse.y = (canvas.height / canvas.offsetHeight) * yToque;
+      }
+
+      function touchmove(e) {
+        var frase = "";
+        for (var i in e) {
+          frase += "" + i + "=" + e[i] + "";
+          frase += "\n";
+        }
+
+        var xToque = null;
+        var yToque = null;
+
+        if (e.changedTouches) {
+          xToque = e.changedTouches[0].pageX - canvas.offsetLeft;
+          yToque = e.changedTouches[0].pageY - canvas.offsetTop;
+        } else {
+          xToque = e.clientX - canvas.offsetLeft;
+          yToque = e.clientY - canvas.offsetTop;
+        }
+
+        mouse.x = (canvas.width / canvas.offsetWidth) * xToque;
+        mouse.y = (canvas.height / canvas.offsetHeight) * yToque;
+      }
+
+      function touchend(e) {
+        mouse.baixo = false;
+        mouse.ultimoCima = true;
+
+        var xToque = null;
+        var yToque = null;
+
+        if (e.changedTouches) {
+          xToque = e.changedTouches[0].pageX - canvas.offsetLeft;
+          yToque = e.changedTouches[0].pageY - canvas.offsetTop;
+        } else {
+          xToque = e.clientX - canvas.offsetLeft;
+          yToque = e.clientY - canvas.offsetTop;
+        }
+
+        mouse.x = (canvas.width / canvas.offsetWidth) * xToque;
+        mouse.y = (canvas.height / canvas.offsetHeight) * yToque;
+      }
+
+      canvas.addEventListener("touchstart", touchstart, false);
+      canvas.addEventListener("touchmove", touchmove, false);
+      canvas.addEventListener("touchend", touchend, false);
+
+      canvas.addEventListener("mousedown", touchstart, false);
+      canvas.addEventListener("mousemove", touchmove, false);
+      canvas.addEventListener("mouseup", touchend, false);
+    </script>
+  </body>
+</html>

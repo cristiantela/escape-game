@@ -1,0 +1,15 @@
+{
+  "name": "escape",
+  "version": "1.0.0",
+  "description": "A challenging game based on Transformice",
+  "main": "server.js",
+  "scripts": {
+    "serve": "node server",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Matheus Cristian <mathues@email.com>",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.17.1"
+  }
+}
